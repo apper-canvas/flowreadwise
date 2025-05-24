@@ -226,7 +226,6 @@ export default function MainFeature() {
 
   return (
     <>
-    <>
       <style>{highlightStyles}</style>
     <section className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16">
       <motion.div
@@ -808,11 +807,11 @@ export default function MainFeature() {
                       )}
                     </div>
                   </div>
-            )}
+                </div>
               </div>
+            )}
           </motion.div>
         </AnimatePresence>
       </motion.div>
-    </>
     </section>
     </>
