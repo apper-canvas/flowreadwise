@@ -131,17 +131,17 @@ export default function MainFeature() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex-1 flex items-center justify-center px-4 sm:px-6 py-3 sm:py-4 rounded-xl font-medium transition-all duration-300 mb-2 sm:mb-0 ${
+              className={`flex-1 flex items-center justify-center px-4 sm:px-6 py-3 sm:py-4 rounded-xl font-semibold transition-all duration-300 mb-2 sm:mb-0 ${
                 activeTab === tab.id
-                  ? 'bg-gradient-to-r from-primary-500 to-secondary-500 text-white shadow-soft'
-                  : 'text-surface-600 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-700/50'
+                  ? 'bg-gradient-to-r from-primary-500 to-secondary-500 text-white shadow-soft font-bold'
+                  : 'text-surface-700 dark:text-surface-200 hover:bg-surface-100 dark:hover:bg-surface-700/50 hover:text-surface-900 dark:hover:text-surface-100'
               }`}
             >
               <ApperIcon 
                 name={tab.icon} 
                 className={`h-5 w-5 mr-2 sm:mr-3 ${activeTab === tab.id ? 'text-white' : ''}`} 
               />
-              <span className="text-sm sm:text-base">{tab.label}</span>
+              <span className="text-sm sm:text-base font-inherit">{tab.label}</span>
             </button>
           ))}
         </div>
