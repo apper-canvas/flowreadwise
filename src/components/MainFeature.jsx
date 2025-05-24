@@ -568,7 +568,6 @@ export default function MainFeature() {
                 </div>
               </div>
             )}
-          </motion.div>
 
             {/* Highlight & Note Tab */}
             {activeTab === 'highlight' && (
@@ -811,6 +810,7 @@ export default function MainFeature() {
                 </div>
               </div>
             )}
-        </AnimatePresence>
+            )}
+          </motion.div>
       </motion.div>
     </section>
