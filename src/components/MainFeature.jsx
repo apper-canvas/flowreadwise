@@ -811,5 +811,6 @@ export default function MainFeature() {
               </div>
           </motion.div>
         </AnimatePresence>
-    </>
+      </motion.div>
+    </section>
     </>
