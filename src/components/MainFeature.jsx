@@ -133,7 +133,7 @@ export default function MainFeature() {
               onClick={() => setActiveTab(tab.id)}
               className={`flex-1 flex items-center justify-center px-4 sm:px-6 py-3 sm:py-4 rounded-xl font-semibold transition-all duration-300 mb-2 sm:mb-0 ${
                 activeTab === tab.id
-                  ? 'bg-gradient-to-r from-primary-500 to-secondary-500 text-white shadow-soft font-bold'
+                  ? 'bg-primary-600 text-white shadow-soft font-bold'
                   : 'text-surface-700 dark:text-surface-200 hover:bg-surface-100 dark:hover:bg-surface-700/50 hover:text-surface-900 dark:hover:text-surface-100'
               }`}
             >
