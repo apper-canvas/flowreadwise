@@ -810,7 +810,8 @@ export default function MainFeature() {
                 </div>
               </div>
             )}
-            )}
+        </AnimatePresence>
           </motion.div>
       </motion.div>
+    </>
     </section>
