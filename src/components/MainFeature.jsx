@@ -11,12 +11,28 @@ export default function MainFeature() {
   const [chatInput, setChatInput] = useState('')
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [readingLevel, setReadingLevel] = useState('intermediate')
+  const [highlights, setHighlights] = useState([])
+  const [selectedText, setSelectedText] = useState('')
+  const [selectionRange, setSelectionRange] = useState(null)
+  const [showHighlightToolbar, setShowHighlightToolbar] = useState(false)
+  const [highlightNote, setHighlightNote] = useState('')
+  const [highlightColor, setHighlightColor] = useState('yellow')
+  const [searchQuery, setSearchQuery] = useState('')
+  const [readingText, setReadingText] = useState('')
+  const [editingHighlight, setEditingHighlight] = useState(null)
+  const [sampleTexts] = useState([
+    { title: "The Science of Learning", content: "Learning is a complex process that involves the formation of new neural pathways in the brain. When we encounter new information, our neurons create connections that allow us to store and retrieve memories. This process, known as neuroplasticity, demonstrates the brain's remarkable ability to adapt and reorganize throughout our lives. Research has shown that active engagement with material, spaced repetition, and connecting new information to existing knowledge significantly enhance learning outcomes." },
+    { title: "Climate Change Impact", content: "Climate change represents one of the most pressing challenges of our time. Rising global temperatures have led to melting ice caps, rising sea levels, and increasingly frequent extreme weather events. Scientists have observed that carbon dioxide levels in the atmosphere have increased by over 40% since pre-industrial times, primarily due to human activities such as burning fossil fuels and deforestation. The consequences of these changes affect ecosystems, agriculture, and human communities worldwide." },
+    { title: "Artificial Intelligence", content: "Artificial intelligence has evolved from science fiction to everyday reality. Modern AI systems can process vast amounts of data, recognize patterns, and make decisions with remarkable accuracy. Machine learning algorithms enable computers to improve their performance through experience, while neural networks mimic the structure of the human brain to solve complex problems. From virtual assistants to autonomous vehicles, AI technology continues to transform how we work, communicate, and live." }
+  ])
   const fileInputRef = useRef(null)
+  const readingAreaRef = useRef(null)
 
   const tabs = [
     { id: 'upload', label: 'Text Analysis', icon: 'FileText' },
     { id: 'chat', label: 'AI Assistant', icon: 'MessageSquare' },
-    { id: 'progress', label: 'Progress', icon: 'BarChart3' }
+    { id: 'progress', label: 'Progress', icon: 'BarChart3' },
+    { id: 'highlight', label: 'Highlight & Note', icon: 'Highlighter' }
   ]
 
   const handleFileUpload = (event) => {
@@ -107,7 +123,110 @@ export default function MainFeature() {
     { label: 'Words Read', value: '12.5K', icon: 'BookOpen', color: 'primary' }
   ]
 
+  const handleTextSelection = () => {
+    const selection = window.getSelection()
+    if (selection.rangeCount > 0 && selection.toString().trim()) {
+      const range = selection.getRangeAt(0)
+      const rect = range.getBoundingClientRect()
+      
+      setSelectedText(selection.toString().trim())
+      setSelectionRange(range.cloneRange())
+      setShowHighlightToolbar(true)
+    } else {
+      setShowHighlightToolbar(false)
+      setSelectedText('')
+      setSelectionRange(null)
+    }
+  }
+
+  const handleCreateHighlight = () => {
+    if (!selectedText || !selectionRange) return
+
+    const highlight = {
+      id: Date.now(),
+      text: selectedText,
+      note: highlightNote,
+      color: highlightColor,
+      timestamp: new Date(),
+      startOffset: selectionRange.startOffset,
+      endOffset: selectionRange.endOffset,
+      startContainer: selectionRange.startContainer.textContent,
+      endContainer: selectionRange.endContainer.textContent
+    }
+
+    setHighlights(prev => [...prev, highlight])
+    setHighlightNote('')
+    setShowHighlightToolbar(false)
+    setSelectedText('')
+    setSelectionRange(null)
+    
+    // Clear selection
+    window.getSelection().removeAllRanges()
+    
+    toast.success('Highlight created successfully!')
+  }
+
+  const handleDeleteHighlight = (id) => {
+    setHighlights(prev => prev.filter(h => h.id !== id))
+    toast.success('Highlight deleted successfully!')
+  }
+
+  const handleEditHighlight = (id, newNote) => {
+    setHighlights(prev => prev.map(h => 
+      h.id === id ? { ...h, note: newNote } : h
+    ))
+    setEditingHighlight(null)
+    toast.success('Note updated successfully!')
+  }
+
+  const handleLoadSampleText = (text) => {
+    setReadingText(text)
+    toast.success('Sample text loaded!')
+  }
+
+  const filteredHighlights = highlights.filter(highlight =>
+    highlight.text.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    highlight.note.toLowerCase().includes(searchQuery.toLowerCase())
+  )
+
+  const renderHighlightedText = (text) => {
+    if (!text || highlights.length === 0) return text
+
+    let result = text
+    const sortedHighlights = [...highlights].sort((a, b) => b.startOffset - a.startOffset)
+
+    sortedHighlights.forEach(highlight => {
+      const regex = new RegExp(highlight.text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi')
+      result = result.replace(regex, (match) => 
+        `<mark class="highlight-${highlight.color} cursor-pointer" data-highlight-id="${highlight.id}" title="${highlight.note || 'No note'}">${match}</mark>`
+      )
+    })
+
+    return result
+  }
+
+  const highlightColors = [
+    { name: 'yellow', bg: 'bg-yellow-200', border: 'border-yellow-400' },
+    { name: 'green', bg: 'bg-green-200', border: 'border-green-400' },
+    { name: 'blue', bg: 'bg-blue-200', border: 'border-blue-400' },
+    { name: 'pink', bg: 'bg-pink-200', border: 'border-pink-400' }
+  ]
+
+  // Add CSS for highlight colors
+  const highlightStyles = `
+    .highlight-yellow { background-color: #fef08a; }
+    .highlight-green { background-color: #bbf7d0; }
+    .highlight-blue { background-color: #bfdbfe; }
+    .highlight-pink { background-color: #fbcfe8; }
+    .highlight-yellow:hover { background-color: #fde047; }
+    .highlight-green:hover { background-color: #86efac; }
+    .highlight-blue:hover { background-color: #93c5fd; }
+    .highlight-pink:hover { background-color: #f9a8d4; }
+  `
+
   return (
+    <>
+      <style>{highlightStyles}</style>
     <section className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16">
       <motion.div
         initial={{ opacity: 0, y: 40 }}
@@ -450,8 +569,251 @@ export default function MainFeature() {
               </div>
             )}
           </motion.div>
+
+            {/* Highlight & Note Tab */}
+            {activeTab === 'highlight' && (
+              <div className="p-6 sm:p-8 lg:p-10">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 h-[600px]">
+                  {/* Reading Area */}
+                  <div className="lg:col-span-2 space-y-4">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                      <h4 className="text-lg sm:text-xl font-bold text-surface-800 dark:text-surface-100">
+                        Reading & Highlighting
+                      </h4>
+                      
+                      {/* Sample Text Loader */}
+                      <div className="flex flex-wrap gap-2">
+                        {sampleTexts.map((sample, index) => (
+                          <button
+                            key={index}
+                            onClick={() => handleLoadSampleText(sample.content)}
+                            className="px-3 py-1 text-xs bg-primary-100 dark:bg-primary-800 text-primary-700 dark:text-primary-200 rounded-lg hover:bg-primary-200 dark:hover:bg-primary-700 transition-colors"
+                          >
+                            {sample.title}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Text Input Area */}
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium text-surface-700 dark:text-surface-200 mb-2">
+                        Load your text for highlighting
+                      </label>
+                      <textarea
+                        value={readingText}
+                        onChange={(e) => setReadingText(e.target.value)}
+                        placeholder="Paste text here or use uploaded text from Analysis tab..."
+                        className="w-full h-24 px-4 py-3 bg-white dark:bg-surface-700 border border-surface-300 dark:border-surface-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none text-sm"
+                      />
+                      
+                      {uploadedText && (
+                        <button
+                          onClick={() => setReadingText(uploadedText)}
+                          className="mt-2 px-4 py-2 bg-primary-100 dark:bg-primary-800 text-primary-700 dark:text-primary-200 rounded-lg hover:bg-primary-200 dark:hover:bg-primary-700 transition-colors text-sm"
+                        >
+                          Use Uploaded Text
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Reading Area */}
+                    <div className="relative">
+                      <div
+                        ref={readingAreaRef}
+                        className="h-96 overflow-y-auto p-6 bg-white dark:bg-surface-700 border border-surface-300 dark:border-surface-600 rounded-xl reading-focus highlight-selection"
+                        onMouseUp={handleTextSelection}
+                        onTouchEnd={handleTextSelection}
+                      >
+                        {readingText ? (
+                          <div 
+                            className="text-surface-800 dark:text-surface-200 leading-relaxed"
+                            dangerouslySetInnerHTML={{ __html: renderHighlightedText(readingText) }}
+                          />
+                        ) : (
+                          <div className="flex flex-col items-center justify-center h-full text-center">
+                            <ApperIcon name="BookOpen" className="h-12 w-12 text-surface-400 mb-4" />
+                            <p className="text-surface-500 dark:text-surface-400">
+                              Load sample text or paste your own content to start highlighting
+                            </p>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Highlight Toolbar */}
+                      {showHighlightToolbar && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="absolute bottom-4 left-4 right-4 p-4 bg-white dark:bg-surface-800 border border-surface-300 dark:border-surface-600 rounded-xl shadow-lg"
+                        >
+                          <div className="space-y-3">
+                            <p className="text-sm font-medium text-surface-700 dark:text-surface-200">
+                              Selected: "{selectedText.slice(0, 50)}..."
+                            </p>
+                            
+                            {/* Color Selection */}
+                            <div className="flex items-center space-x-2">
+                              <span className="text-xs text-surface-600 dark:text-surface-400">Color:</span>
+                              {highlightColors.map((color) => (
+                                <button
+                                  key={color.name}
+                                  onClick={() => setHighlightColor(color.name)}
+                                  className={`w-6 h-6 rounded-full ${color.bg} border-2 ${
+                                    highlightColor === color.name ? color.border : 'border-transparent'
+                                  } hover:scale-110 transition-transform`}
+                                />
+                              ))}
+                            </div>
+                            
+                            {/* Note Input */}
+                            <input
+                              type="text"
+                              value={highlightNote}
+                              onChange={(e) => setHighlightNote(e.target.value)}
+                              placeholder="Add a note (optional)"
+                              className="w-full px-3 py-2 bg-surface-50 dark:bg-surface-700 border border-surface-300 dark:border-surface-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
+                            />
+                            
+                            {/* Action Buttons */}
+                            <div className="flex space-x-2">
+                              <button
+                                onClick={handleCreateHighlight}
+                                className="flex-1 px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors text-sm font-medium"
+                              >
+                                <ApperIcon name="Highlighter" className="h-4 w-4 mr-2 inline" />
+                                Highlight
+                              </button>
+                              <button
+                                onClick={() => setShowHighlightToolbar(false)}
+                                className="px-4 py-2 bg-surface-300 dark:bg-surface-600 text-surface-700 dark:text-surface-200 rounded-lg hover:bg-surface-400 dark:hover:bg-surface-500 transition-colors text-sm"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </div>
+                        </motion.div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Highlights Sidebar */}
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h5 className="text-lg font-semibold text-surface-800 dark:text-surface-100">
+                        My Highlights
+                      </h5>
+                      <span className="px-2 py-1 bg-primary-100 dark:bg-primary-800 text-primary-700 dark:text-primary-200 rounded-lg text-xs font-medium">
+                        {highlights.length}
+                      </span>
+                    </div>
+
+                    {/* Search Highlights */}
+                    <div className="relative">
+                      <ApperIcon name="Search" className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-surface-400" />
+                      <input
+                        type="text"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        placeholder="Search highlights..."
+                        className="w-full pl-10 pr-4 py-2 bg-white dark:bg-surface-700 border border-surface-300 dark:border-surface-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
+                      />
+                    </div>
+
+                    {/* Highlights List */}
+                    <div className="h-96 overflow-y-auto space-y-3 scrollbar-hide">
+                      {filteredHighlights.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center h-full text-center">
+                          <ApperIcon name="Highlighter" className="h-8 w-8 text-surface-400 mb-2" />
+                          <p className="text-sm text-surface-500 dark:text-surface-400">
+                            {highlights.length === 0 ? 'No highlights yet' : 'No highlights match your search'}
+                          </p>
+                        </div>
+                      ) : (
+                        filteredHighlights.map((highlight) => (
+                          <motion.div
+                            key={highlight.id}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className={`p-4 bg-white dark:bg-surface-800 border-l-4 border-${highlight.color}-400 rounded-lg shadow-sm`}
+                          >
+                            <div className="space-y-2">
+                              <p className="text-sm text-surface-800 dark:text-surface-200 font-medium line-clamp-2">
+                                "{highlight.text}"
+                              </p>
+                              
+                              {editingHighlight === highlight.id ? (
+                                <div className="space-y-2">
+                                  <textarea
+                                    defaultValue={highlight.note}
+                                    className="w-full p-2 text-xs bg-surface-50 dark:bg-surface-700 border border-surface-300 dark:border-surface-600 rounded focus:ring-1 focus:ring-primary-500 resize-none"
+                                    rows="2"
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter' && !e.shiftKey) {
+                                        e.preventDefault()
+                                        handleEditHighlight(highlight.id, e.target.value)
+                                      }
+                                    }}
+                                  />
+                                  <div className="flex space-x-1">
+                                    <button
+                                      onClick={(e) => {
+                                        const textarea = e.target.closest('.space-y-2').querySelector('textarea')
+                                        handleEditHighlight(highlight.id, textarea.value)
+                                      }}
+                                      className="px-2 py-1 bg-primary-500 text-white rounded text-xs hover:bg-primary-600"
+                                    >
+                                      Save
+                                    </button>
+                                    <button
+                                      onClick={() => setEditingHighlight(null)}
+                                      className="px-2 py-1 bg-surface-300 dark:bg-surface-600 text-surface-700 dark:text-surface-200 rounded text-xs hover:bg-surface-400 dark:hover:bg-surface-500"
+                                    >
+                                      Cancel
+                                    </button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <p className="text-xs text-surface-600 dark:text-surface-400">
+                                  {highlight.note || 'No note'}
+                                </p>
+                              )}
+                              
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs text-surface-500 dark:text-surface-400">
+                                  {highlight.timestamp.toLocaleDateString()}
+                                </span>
+                                <div className="flex space-x-1">
+                                  <button
+                                    onClick={() => setEditingHighlight(highlight.id)}
+                                    className="p-1 text-surface-400 hover:text-primary-500 transition-colors"
+                                  >
+                                    <ApperIcon name="Edit2" className="h-3 w-3" />
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      if (window.confirm('Delete this highlight?')) {
+                                        handleDeleteHighlight(highlight.id)
+                                      }
+                                    }}
+                                    className="p-1 text-surface-400 hover:text-red-500 transition-colors"
+                                  >
+                                    <ApperIcon name="Trash2" className="h-3 w-3" />
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          </motion.div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
         </AnimatePresence>
       </motion.div>
     </section>
   )
+    </>
 }
