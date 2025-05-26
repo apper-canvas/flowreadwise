@@ -225,7 +225,6 @@ export default function MainFeature() {
   `
 
   return (
-    <><style>{highlightStyles}</style>
     <section className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16">
       <motion.div
         initial={{ opacity: 0, y: 40 }}
@@ -813,5 +812,4 @@ export default function MainFeature() {
         </AnimatePresence>
       </motion.div>
     </section>
-    </>
     </>
